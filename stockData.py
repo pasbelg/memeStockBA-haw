@@ -84,7 +84,7 @@ while True:
         backupCounter = dict((stock,1) for stock in todaysStocks)
         print(backupCounter)
         while timeBetween(getUTC(now), nyseScheduleToday['market_open'][0], nyseScheduleToday['market_close'][0]):
-            print('Der Markt ist geöffnet schreibe Kursdaten in die Datenbank')
+            print('Der Markt ist geöffnet Datenerhebung gestartet')
             for stock in todaysStocks:
                 written = processStockData(stock, backupCounter[stock])
                 if written:

@@ -14,6 +14,7 @@ auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth)
 api.me().screen_name
 
+# Listener Klasse für das Verarbeitung initialisierung des Datenstreams und Regeln für die Verarbeitung der empfangenen Daten
 class tweepylistener(tweepy.StreamListener):
     def __init__(self, api = None):
         self.api = api or API()
@@ -36,35 +37,38 @@ class tweepylistener(tweepy.StreamListener):
     # Fall 1: neuer Status Tweet
     def on_status(self, status):
         writeRecord(json.loads(status), 'tweetData')
-        #print(status)
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Tweet gefunden und hinzugefügt')
         return True
     # Fall 2: User löscht Tweet nach gewisser Zeit
     def on_delete(self, status_id, user_id):
         writeRecord(json.loads(status), 'deletedTweetData')
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Gelöschten Tweet gefunden und hinzugefügt')
         return
     # Fall 3: Streaming API Rate Limit
     def on_limit(self, track):
         #writeRecord(json.loads(track), 'twitterLimitInfo')
-        sys.stderr.write(time.strftime("%Y%m%d-%H%M%S") + '>> Fehler: ' + str(status_code) + + '\n')
+        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Fehler: ' + str(status_code) + + '\n')
         time.sleep(60)
         return False
     def on_timeout(self):
         #writeRecord(json.loads(track), 'twitterTimeoutInfo')
-        sys.stderr.write(time.strftime("%Y%m%d-%H%M%S") + '>> Timeout, ware für 120 Sekunden\n')
+        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Timeout, ware für 120 Sekunden\n')
         time.sleep(120)
         return
-def main():
-    list_terms = [searchTerm]
+
+# Funktion um den Stream zu starten
+def main(searchTemList):
+    list_terms = searchTemList
     listener = tweepylistener(api)
     stream = tweepy.Stream(auth, listener, timeout=600.0)
     while True:
-        print(time.strftime("%Y%m%d-%H%M%S") + ">> Streaming gestartet... beobachte und sammle" )
-        print(time.strftime("%Y%m%d-%H%M%S") + ">> Suche Twitter nach: " + str(list_terms)[1:-1])
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Streaming gestartet... beobachte und sammle" )
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Suche Twitter nach: " + str(list_terms)[1:-1])
         try:
             stream.filter(track=list_terms, is_async=False)
             break
         except Exception as e:
-            print('Fehler')
-            time.sleep(60)
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Stream konnte nicht gestartet werden erneuter Versuch in 5 Sekunden')
+            time.sleep()
 
-main() 
+main(['$GME', '$AMC']) 
