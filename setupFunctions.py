@@ -28,13 +28,5 @@ def getSecret(systemName, secretName):
         exit('System "' + systemName + '" konnten nicht gefunden werden. Bitte überprüfe die Eingabe. Folgende System sind Vorhanden: ' + 
                 str([(lines[x])[1:] for x in systems])
             )
-    '''
 
-        
-        else:
-                exit('Secret ' + secretName + ' für ' + systemName + ' konnten nicht gefunden werden. Bitte überprüfe die Eingabe deines gesuchten Secrets')
-        if secretName in lines:
-            print('Dein Secret ist', secretName)
-        else:
-            print('Secret nicht gefunden')
-    '''
+
