@@ -66,8 +66,8 @@ def tweetMain(searchTerm):
     listener = tweepylistener(api)
     stream = tweepy.Stream(auth, listener, timeout=600.0)
     while True:
-        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Twitter Streaming gestartet" )
-        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Durchsuche Twitter nach: " + str(list_terms)[1:-1])
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Twitter Streaming gestartet')
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Durchsuche Twitter nach:', str(list_terms)[1:-1])
         try:
             stream.filter(track=list_terms, is_async=False)
             break
