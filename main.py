@@ -54,12 +54,12 @@ def stocksBySchedule(schedule):
     return tickers
 
 while True:
-    #Test Zeiten
-    now = datetime.datetime(2021,4,16,16,0,0)
-    today = datetime.date(2021,4,16)
+    # Test Zeiten
+    #now = datetime.datetime(2021,4,16,16,0,0)
+    #today = datetime.date(2021,4,16)
     # Live Zeiten
-    #now = datetime.datetime.today()
-    #today = datetime.date.today()
+    now = datetime.datetime.today()
+    today = datetime.date.today()
     todaysStocks = stocksBySchedule(researchSchedule)
     if todaysStocks:
         # Setup und Info für den Twitter Stream
