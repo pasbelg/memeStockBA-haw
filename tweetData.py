@@ -3,7 +3,6 @@ from setupFunctions import getSecret
 from databaseFunctions import writeRecord
 import tweepy, time, json
 
-searchTerm = input('Bitte den Begriff eingeben auf den die Tweets gefiltert werden sollen')
 # Authentifizierung mittels Zugangsdaten, die unter 
 consumer_key = getSecret("twitter", "consumerKey")
 consumer_secret = getSecret("twitter", "consumerSecret")
@@ -47,23 +46,28 @@ class tweepylistener(tweepy.StreamListener):
     # Fall 3: Streaming API Rate Limit
     def on_limit(self, track):
         #writeRecord(json.loads(track), 'twitterLimitInfo')
-        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Fehler: ' + str(status_code) + + '\n')
+        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Twitter Stream Fehler: ' + str(status_code) + + '\n')
         time.sleep(60)
         return False
     def on_timeout(self):
         #writeRecord(json.loads(track), 'twitterTimeoutInfo')
-        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Timeout, ware für 120 Sekunden\n')
+        sys.stderr.write(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Twitter Stream Timeout, ware für 120 Sekunden\n')
         time.sleep(120)
         return
 
+#Funktion um den übergebenen Suchbegriff auf mehrere passende Suchbegriffe zu erweitern. Ist kein mapping möglich, wird nur der übergebene Begriff in einer Liste wiedergegeben.
+def mapSearchTerms(searchTerm):
+    searchTermList = []
+    searchTermList.append('$'+searchTerm)
+    return searchTermList
 # Funktion um den Stream zu starten
-def main(searchTemList):
-    list_terms = searchTemList
+def tweetMain(searchTerm):
+    list_terms = mapSearchTerms(searchTerm)
     listener = tweepylistener(api)
     stream = tweepy.Stream(auth, listener, timeout=600.0)
     while True:
-        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Streaming gestartet... beobachte und sammle" )
-        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Suche Twitter nach: " + str(list_terms)[1:-1])
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Twitter Streaming gestartet" )
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + ">> Durchsuche Twitter nach: " + str(list_terms)[1:-1])
         try:
             stream.filter(track=list_terms, is_async=False)
             break
@@ -71,4 +75,4 @@ def main(searchTemList):
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Stream konnte nicht gestartet werden erneuter Versuch in 5 Sekunden')
             time.sleep()
 
-main(['$GME', '$AMC']) 
+#tweetMain(['$GME', '$AMC']) 
