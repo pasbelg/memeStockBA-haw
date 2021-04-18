@@ -5,9 +5,10 @@ from tweetData import tweetMain
 from stockData import stockMain
 import pytz
 from tzlocal import get_localzone
+import dateutil.parser
 import threading
 
-researchSchedule = pd.read_excel('input/test.xlsx')
+researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]')
 
 # Funktion die überprüft ob eine übergebene Zeit zwischen zwei übergebenen Zeitpunkten liegt
 def timeBetween(now, start, end):
@@ -43,7 +44,11 @@ def stocksBySchedule(schedule):
     tickers = []
     for stock in schedule:
         for date in schedule[stock]:
-            if date == today:
+            try:
+                date = dateutil.parser.parse(str(date))
+            except:
+                pass
+            if date.date() == today:
                 tickers.append(stock)
     return tickers
 
@@ -55,6 +60,7 @@ while True:
     #now = datetime.datetime.today()
     #today = datetime.date.today()
     todaysStocks = stocksBySchedule(researchSchedule)
+    print(todaysStocks)
     if todaysStocks:
         # Setup und Info für den Twitter Stream
         twitterStream = threading.Thread(name='twitterStream', target=tweetMain, args=[todaysStocks[0]])
