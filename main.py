@@ -6,9 +6,10 @@ from stockData import stockMain
 import pytz
 from tzlocal import get_localzone
 import dateutil.parser
-import threading
+import multiprocessing
 
-researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]')
+researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]', engine='python')
+#researchSchedule = pd.read_excel('input/test.xlsx')
 
 # Funktion die überprüft ob eine übergebene Zeit zwischen zwei übergebenen Zeitpunkten liegt
 def timeBetween(now, start, end):
@@ -60,33 +61,35 @@ while True:
     #now = datetime.datetime.today()
     #today = datetime.date.today()
     todaysStocks = stocksBySchedule(researchSchedule)
-    print(todaysStocks)
     if todaysStocks:
         # Setup und Info für den Twitter Stream
-        twitterStream = threading.Thread(name='twitterStream', target=tweetMain, args=[todaysStocks[0]])
+        twitterStream = multiprocessing.Process(name='twitterStream', target=tweetMain, args=[todaysStocks[0]])
         if len(todaysStocks) > 1:
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), '>> Mehr als eine Aktie eingeplant. Twitterstream nur für', todaysStocks[0], 'aufgebaut')
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Mehr als eine Aktie eingeplant. Twitterstream nur für', todaysStocks[0], 'aufgebaut')
 
         # Setup für den Zeitplan der NYSE
         nyse = mcal.get_calendar('NYSE')
         nyseScheduleToday = nyse.schedule(start_date=today, end_date=today)
         backupCounter = dict((stock,1) for stock in todaysStocks)
 
+        # Schleife die so lange ausgeführt wird wie die aktuelle UTC Zeit des Systems innerhalb der UTC Zeit der NYSE Öffnungszeiten des Tages liegt
         while timeBetween(getUTC(now), nyseScheduleToday['market_open'][0], nyseScheduleToday['market_close'][0]):
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), 'Der Markt ist geöffnet Datenerhebung gestartet')
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Der Markt ist geöffnet Datenerhebung gestartet')
+            # Abfrage ob der Thread schon läuft damit er nicht doppelt gestartet wird
             if twitterStream.is_alive() == 0:
                 twitterStream.start()
             
             stockMain(todaysStocks, backupCounter)
             
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), '>> Nächster Schreibvorgang in der nächsten vollen Minute')
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Nächster Schreibvorgang in der nächsten vollen Minute')
             time.sleep(secondsTillNext('minute'))
-            #time.sleep(3)
+            #time.sleep(3) # Wird zum schnelleren Testen der Logik benötigt
             
         else:
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), '>> Keine neuen Daten verfügbar weil die NYSE geschlossen ist. Es wird bis zur nächsten vollen Minute gewartet')
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE):', nyseScheduleToday)
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine neuen Daten verfügbar weil die NYSE geschlossen ist. Es wird bis zur nächsten vollen Minute gewartet')
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE):', nyseScheduleToday)
+            twitterStream.terminate()
             time.sleep(secondsTillNext('minute'))
     else:
-        print(time.strftime("%Y-%m-%d %H:%M:%S"), '>> Keine Untersuchung für heute eingeplant es wird bis zum nächsten Tag gewartet')
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine Untersuchung für heute eingeplant es wird bis zum nächsten Tag gewartet')
         time.sleep(secondsTillNext('day'))
