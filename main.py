@@ -55,8 +55,8 @@ def stocksBySchedule(schedule):
 
 while True:
     # Test Zeiten
-    #now = datetime.datetime(2021,4,16,16,0,0)
-    #today = datetime.date(2021,4,16)
+    #now = datetime.datetime(2021,4,19,16,0,0)
+    #today = datetime.date(2021,4,19)
     # Live Zeiten
     now = datetime.datetime.today()
     today = datetime.date.today()
@@ -88,7 +88,8 @@ while True:
         else:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine neuen Daten verfügbar weil die NYSE geschlossen ist. Es wird bis zur nächsten vollen Minute gewartet')
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE):', nyseScheduleToday)
-            twitterStream.terminate()
+            if twitterStream.is_alive() == 1:
+                twitterStream.terminate()
             time.sleep(secondsTillNext('minute'))
     else:
         print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine Untersuchung für heute eingeplant es wird bis zum nächsten Tag gewartet')
