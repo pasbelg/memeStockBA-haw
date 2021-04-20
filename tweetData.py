@@ -3,7 +3,7 @@ from setupFunctions import getSecret
 from databaseFunctions import writeRecord
 import tweepy, time, json
 
-# Authentifizierung mittels Zugangsdaten, die unter 
+# Authentifizierung mittels Zugangsdaten, die in der secrets Datei hinterlegt sind
 consumer_key = getSecret("twitter", "consumerKey")
 consumer_secret = getSecret("twitter", "consumerSecret")
 access_key = getSecret("twitter", "accessKey")
@@ -55,11 +55,14 @@ class tweepylistener(tweepy.StreamListener):
         time.sleep(120)
         return
 
-#Funktion um den übergebenen Suchbegriff auf mehrere passende Suchbegriffe zu erweitern. Ist kein mapping möglich, wird nur der übergebene Begriff in einer Liste wiedergegeben.
+# Funktion um den übergebenen Suchbegriff auf mehrere passende Suchbegriffe zu erweitern. Ist kein mapping möglich, wird nur der übergebene Begriff in einer Liste wiedergegeben.
+# Hier fehlt noch ein wenig Recherche wie die Schlagwörter am besten eingelesen werden und wie Twitter damit umgeht
+# Bisher wird an den Ticker nur ein $ vorne drangehangen 
 def mapSearchTerms(searchTerm):
     searchTermList = []
     searchTermList.append('$'+searchTerm)
     return searchTermList
+
 # Funktion um den Stream zu starten
 def tweetMain(searchTerm):
     list_terms = mapSearchTerms(searchTerm)
@@ -74,5 +77,3 @@ def tweetMain(searchTerm):
         except Exception as e:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Stream konnte nicht gestartet werden erneuter Versuch in 5 Sekunden')
             time.sleep()
-
-#tweetMain(['$GME', '$AMC']) 
