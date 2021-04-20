@@ -1,53 +1,36 @@
-# Raw Package
-import numpy as np
-import pandas as pd
-
-#Data Source
+from databaseFunctions import writeRecord
 import yfinance as yf
+import time
 
-#Data viz
-import plotly.graph_objs as go
+# Funktion um die Daten von Yahoo Finance herunterzuladen, zu verarbeiten und dann in die Datenbank zu schreiben
+def processStockData(stock, datasets):
+    # Um die aufgrund der relativen Berechnung auf 0 stehenden Volumendaten entfernen zu können müssen die zu beschaffenden Datensetzt immer 2 Minuten mehr umfassen
+    # (insgesamt 4 Minuten, da angebrochene Minute nicht dazu zählt)
+    df = yf.download(tickers=stock, period=str(datasets+3)+'m', interval='1m', progress = False)
+    df = df[:-1]
+    df = df[1:]
+    df['Ticker'] = stock
+    df['Time'] = df.index.strftime("%Y-%m-%d %H:%M:%S")
+    recordsList = df.to_dict('records')
+    if df.empty:
+        return False
+    else:
+        # Abfangen des Fehlercodes bei Problemen mit der Datenbank UND beim schreiben in die Failover-Datei
+        try:
+            for minuteData in recordsList:
+                writeRecord(minuteData, 'stockData')
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>>', datasets, 'Kursdatensätze für "'+stock+'" wurden erfolgreich gespiechert')
+            return True
+        except Exception as e:
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>>', stock+': Fehler beim schreiben der Kursdaten. Fehlercode:', e)
+            return False
 
-#Interval required 1 minute
-data = yf.download(tickers='GME AMC NOK BB GOOG AAPL', start="2021-01-14", end="2021-02-05", interval='1d')
-dataGME = yf.Ticker("GME")
-#data = yf.download(tickers='GME AMC UBER AAPL', period='2d', interval='5m')
-
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    print(dataGME.info['beta'])
-    #print(data)
-    #print(data['Volume'].idxmax(axis=1))
-    #print(data['Volume'])
-
-'''
-#declare figure
-fig = go.Figure()
-
-#Candlestick
-fig.add_trace(go.Candlestick(x=data.index,
-                open=data['Open'],
-                high=data['High'],
-                low=data['Low'],
-                close=data['Close'], name = 'market data'))
-
-# Add titles
-fig.update_layout(
-    title='Uber live share price evolution',
-    yaxis_title='Stock Price (USD per Shares)')
-
-# X-Axes
-fig.update_xaxes(
-    rangeslider_visible=True,
-    rangeselector=dict(
-        buttons=list([
-            dict(count=15, label="15m", step="minute", stepmode="backward"),
-            dict(count=45, label="45m", step="minute", stepmode="backward"),
-            dict(count=1, label="HTD", step="hour", stepmode="todate"),
-            dict(count=3, label="3h", step="hour", stepmode="backward"),
-            dict(step="all")
-        ])
-    )
-)
-
-#Show
-fig.show()'''
+def stockMain(stockList, backupCounter):
+    for stock in stockList:
+        written = processStockData(stock, backupCounter[stock])
+        # backupCounter zählt bei Download/Schreibfehlern den Counter innerhalb des Dictionarys hoch um beim nächsten Schleifendurchlauf den alten Datesatz mitzunehmen
+        if written:
+            backupCounter[stock] = 1
+        else:
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>>', stock+': Es konnten keine Einträge gespeichert werden. Aktie wird für Backuplauf vorgemerkt.')
+            backupCounter[stock] += 1
