@@ -8,10 +8,7 @@ from tzlocal import get_localzone
 import dateutil.parser
 import multiprocessing
 
-researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]', engine='python')
-#researchSchedule = pd.read_excel('input/test.xlsx')
-
-# Funktion die überprüft ob eine übergebene Zeit zwischen zwei übergebenen Zeitpunkten liegt
+# Funktion, die überprüft ob eine übergebene Zeit zwischen zwei übergebenen Zeitpunkten liegt
 def timeBetween(now, start, end):
     if start <= end:
         return start <= now < end
@@ -60,14 +57,20 @@ while True:
     # Live Zeiten
     now = datetime.datetime.today()
     today = datetime.date.today()
+    
+    # Der Zeitplan wird in jedem Durchlauf außerhalb der Marktzeiten neu eingelesen (Änderungen unterbrechen nicht den Datensammlung)
+    researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]', engine='python')
+    #researchSchedule = pd.read_excel('input/researchSchedule.xlsx') # Auch Excel import möglich
     todaysStocks = stocksBySchedule(researchSchedule)
+    
+    # Wenn Aktien im für den Tag eingeplant sind
     if todaysStocks:
         # Setup und Info für den Twitter Stream
         twitterStream = multiprocessing.Process(name='twitterStream', target=tweetMain, args=[todaysStocks[0]])
         if len(todaysStocks) > 1:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Mehr als eine Aktie eingeplant. Twitterstream nur für', todaysStocks[0], 'aufgebaut')
 
-        # Setup für den Zeitplan der NYSE
+        # Setup für den tagesaktuellen Zeitplan der NYSE
         nyse = mcal.get_calendar('NYSE')
         nyseScheduleToday = nyse.schedule(start_date=today, end_date=today)
         backupCounter = dict((stock,1) for stock in todaysStocks)
@@ -93,7 +96,7 @@ while True:
             now = datetime.datetime.today()
         else:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine neuen Daten verfügbar weil die NYSE geschlossen ist. Es wird bis zur nächsten vollen Minute gewartet')
-            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE):', nyseScheduleToday)
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE in UTC):', nyseScheduleToday['market_open'][0], 'bis',  nyseScheduleToday['market_close'][0])
             if twitterStream.is_alive() == 1:
                 twitterStream.terminate()
             time.sleep(secondsTillNext('minute'))
