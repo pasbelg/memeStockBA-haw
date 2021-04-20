@@ -71,10 +71,14 @@ while True:
         nyse = mcal.get_calendar('NYSE')
         nyseScheduleToday = nyse.schedule(start_date=today, end_date=today)
         backupCounter = dict((stock,1) for stock in todaysStocks)
+        
+        # Now wird bei jedem Durchgang in der while True Loop erhöht (Zeit verläuft now wird am Anfang neu gesetzt)
+        # Ist der Markt eröffnet gibt es eine Ausgabe bevor die Schleife für die Datenerhebung startet
+        if timeBetween(getUTC(now), nyseScheduleToday['market_open'][0], nyseScheduleToday['market_close'][0]):
+            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Der Markt ist geöffnet Datenerhebung gestartet')
 
         # Schleife die so lange ausgeführt wird wie die aktuelle UTC Zeit des Systems innerhalb der UTC Zeit der NYSE Öffnungszeiten des Tages liegt
         while timeBetween(getUTC(now), nyseScheduleToday['market_open'][0], nyseScheduleToday['market_close'][0]):
-            print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Der Markt ist geöffnet Datenerhebung gestartet')
             # Abfrage ob der Thread schon läuft damit er nicht doppelt gestartet wird
             if twitterStream.is_alive() == 0:
                 twitterStream.start()
@@ -85,6 +89,8 @@ while True:
             time.sleep(secondsTillNext('minute'))
             #time.sleep(3) # Wird zum schnelleren Testen der Logik benötigt
             
+            # now wird neu gesetzt damit die While Loop nicht unendlich läuft
+            now = datetime.datetime.today()
         else:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Keine neuen Daten verfügbar weil die NYSE geschlossen ist. Es wird bis zur nächsten vollen Minute gewartet')
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> UTC Zeit:', getUTC(now), 'Heutige Öffnungszeiten (NYSE):', nyseScheduleToday)
