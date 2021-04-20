@@ -76,4 +76,4 @@ def tweetMain(searchTerm):
             break
         except Exception as e:
             print(time.strftime("%Y-%m-%d %H:%M:%S") + '>> Stream konnte nicht gestartet werden erneuter Versuch in 5 Sekunden')
-            time.sleep()
+            time.sleep(5)
