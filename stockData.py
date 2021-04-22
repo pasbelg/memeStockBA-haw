@@ -4,7 +4,7 @@ import time
 
 # Funktion um die Daten von Yahoo Finance herunterzuladen, zu verarbeiten und dann in die Datenbank zu schreiben
 def processStockData(stock, datasets):
-    # Um die aufgrund der relativen Berechnung auf 0 stehenden Volumendaten entfernen zu können müssen die zu beschaffenden Datensetzt immer 2 Minuten mehr umfassen
+    # Um die aufgrund der relativen Berechnung auf 0 stehenden Volumendaten entfernen zu können müssen die zu beschaffenden Datensets immer 2 Minuten mehr umfassen
     # (insgesamt 4 Minuten, da angebrochene Minute nicht dazu zählt)
     df = yf.download(tickers=stock, period=str(datasets+3)+'m', interval='1m', progress = False)
     df = df[:-1]
