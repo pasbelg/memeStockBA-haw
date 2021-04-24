@@ -55,17 +55,18 @@ class tweepylistener(tweepy.StreamListener):
         time.sleep(120)
         return
 
-# Funktion um den übergebenen Suchbegriff auf mehrere passende Suchbegriffe zu erweitern. Ist kein mapping möglich, wird nur der übergebene Begriff in einer Liste wiedergegeben.
-# Hier fehlt noch ein wenig Recherche wie die Schlagwörter am besten eingelesen werden und wie Twitter damit umgeht
-# Bisher wird an den Ticker nur ein $ vorne drangehangen 
-def mapSearchTerms(searchTerm):
+# Funktion um den übergebenen Suchbegriff um bestimmte Twitterspezifische Zeichen zu erweitern
+# Hier könnte auch eine Mapping für die Begriffe, welche für eine Suchanfrage hinterlegt sind eingebaut werden. Bisher wird nur ein führendes # und $ benötigt
+def defineSearchTerms(searchTerm):
     searchTermList = []
-    searchTermList.append('$'+searchTerm)
+    leadingChars = ['#', '$']
+    for char in leadingChars:
+        searchTermList.append(char+searchTerm)
     return searchTermList
 
 # Funktion um den Stream zu starten
 def tweetMain(searchTerm):
-    list_terms = mapSearchTerms(searchTerm)
+    list_terms = defineSearchTerms(searchTerm)
     listener = tweepylistener(api)
     stream = tweepy.Stream(auth, listener, timeout=600.0)
     while True:
