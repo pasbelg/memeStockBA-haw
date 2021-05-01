@@ -46,8 +46,9 @@ def stocksBySchedule(schedule):
                 date = dateutil.parser.parse(str(date))
             except:
                 pass
-            if date.date() == today:
-                tickers.append(stock)
+            if isinstance(date, datetime.datetime):
+                if date.date() == today:
+                    tickers.append(stock)
     return tickers
 
 while True:
@@ -62,7 +63,6 @@ while True:
     researchSchedule = pd.read_csv('input/researchSchedule.csv', sep='[,; ]', engine='python')
     #researchSchedule = pd.read_excel('input/researchSchedule.xlsx') # Auch Excel import möglich
     todaysStocks = stocksBySchedule(researchSchedule)
-    
     # Wenn Aktien im für den Tag eingeplant sind
     if todaysStocks:
         # Setup und Info für den Twitter Stream
