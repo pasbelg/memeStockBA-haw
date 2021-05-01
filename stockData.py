@@ -6,15 +6,20 @@ import time
 def processStockData(stock, datasets):
     # Um die aufgrund der relativen Berechnung auf 0 stehenden Volumendaten entfernen zu können müssen die zu beschaffenden Datensets immer 2 Minuten mehr umfassen
     # (insgesamt 4 Minuten, da angebrochene Minute nicht dazu zählt)
-    df = yf.download(tickers=stock, period=str(datasets+3)+'m', interval='1m', progress = False)
-    df = df[:-1]
-    df = df[1:]
-    df['Ticker'] = stock
-    df['Time'] = df.index.strftime("%Y-%m-%d %H:%M:%S")
-    recordsList = df.to_dict('records')
+    try:
+        df = yf.download(tickers=stock, period=str(datasets+3)+'m', interval='1m', progress = False)
+    except Exception as e:
+        print(time.strftime("%Y-%m-%d %H:%M:%S") + '>>', stock+': Fehler beim herunterladen der Kursdaten. Fehlercode:', e)
+        return False
+    # Wird ein leeres Dataframe wiedergegeben wurden keine Daten von yf.download heruntergeladen
     if df.empty:
         return False
     else:
+        df = df[:-1]
+        df = df[1:]
+        df['Ticker'] = stock
+        df['Time'] = df.index.strftime("%Y-%m-%d %H:%M:%S")
+        recordsList = df.to_dict('records')
         # Abfangen des Fehlercodes bei Problemen mit der Datenbank UND beim schreiben in die Failover-Datei
         try:
             for minuteData in recordsList:
