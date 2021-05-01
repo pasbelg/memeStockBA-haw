@@ -62,6 +62,7 @@ def defineSearchTerms(searchTerm):
     leadingChars = ['#', '$']
     for char in leadingChars:
         searchTermList.append(char+searchTerm)
+        searchTermList.append(char+searchTerm.lower())
     return searchTermList
 
 # Funktion um den Stream zu starten
