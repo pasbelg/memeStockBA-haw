@@ -43,11 +43,12 @@ def stocksBySchedule(schedule):
     for stock in schedule:
         for date in schedule[stock]:
             try:
-                date = dateutil.parser.parse(str(date))
+                date = dateutil.parser.parse(str(date), dayfirst=True)
             except:
                 pass
             if isinstance(date, datetime.datetime):
                 if date.date() == today:
+                    print(date)
                     tickers.append(stock)
     return tickers
 
